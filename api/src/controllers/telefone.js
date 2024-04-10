@@ -1,11 +1,11 @@
-const con = require('../connect/mysql');
+const con = require('../connections/mysql');
 
 // CRUD - CREATE
 
 const addTelefone = (req, res) => {
     
     const { cpf, numero } = req.body;
-    if (cpf && numero) {
+    if (matricula && numero) {
         con.query('INSERT INTO telefone (cpf, numero) VALUES (?, ?)',
             [cpf, numero],
             (err, result) => {
@@ -51,10 +51,10 @@ const getTelefone = (req, res) => {
 
 const updateTelefone = (req, res) => {
 
-    const { cpf, numero } = req.body;
-    if (cpf && numero) {
+    const { matricula, numero } = req.body;
+    if (matricula && numero) {
         con.query('UPDATE telefone SET numero = ? WHERE cpf = ?', 
-        [cpf, matricula], 
+        [numero, cpf], 
         (err, result) => {
             if (err) {
                 res.status(500).json({ error: err });
@@ -73,7 +73,7 @@ const updateTelefone = (req, res) => {
 const deleteTelefone = (req, res) => {
     
     const { cpf } = req.params;
-    if (matricula) {
+    if (cpf) {
         con.query('DELETE FROM telefone WHERE cpf = ?', [cpf], (err, result) => {
             if (err) {
                 res.status(500).json({ error: err });

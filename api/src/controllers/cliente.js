@@ -1,4 +1,6 @@
-const con = require ('../connect/mysql');
+const con = require('../connections/mysql');
+
+// CRUD - CREATE
 
 const addCliente = (req, res) => {
     
@@ -8,7 +10,7 @@ const addCliente = (req, res) => {
             [cpf, nome_cliente],
             (err, result) => {
                 if (err) {
-                    console.error('Erro ao adicionar cliente:', err);
+                    console.error('Erro ao adicionar funcionário:', err);
                     res.status(500).json({ error: 'Erro ao adicionar cliente' });
                 } else {
                     const newEmployee = { cpf, nome_cliente };
@@ -64,31 +66,46 @@ const updateCliente = (req, res) => {
     } else {
         res.status(400).json({ error: 'Favor enviar todos os campos obrigatórios' });
     }
-
 }
 
 // CRUD - DELETE
 
 const deleteCliente = (req, res) => {
-    
     const { cpf } = req.params;
+    
     if (cpf) {
-        con.query('DELETE FROM cliente WHERE cpf = ?', [cpf], (err, result) => {
-            if (err) {
-                res.status(500).json({ error: err });
+        // Excluir todas as linhas na tabela telefone que têm uma referência para o CPF especificado
+        con.query('DELETE FROM telefone WHERE cpf = ?', [cpf], (errTelefone, resultTelefone) => {
+            if (errTelefone) {
+                res.status(500).json({ error: errTelefone });
             } else {
-                if (result.affectedRows === 0) {
-                    res.status(404).json({ error: 'Cliente não encontrado' });
-                } else {
-                    res.status(200).json({ message: 'Cliente removido com sucesso' });
-                }
+                // Excluir todas as linhas na tabela aluguel que têm uma referência para o CPF especificado
+                con.query('DELETE FROM aluguel WHERE cpf = ?', [cpf], (errAluguel, resultAluguel) => {
+                    if (errAluguel) {
+                        res.status(500).json({ error: errAluguel });
+                    } else {
+                        // Finalmente, excluir a linha na tabela cliente
+                        con.query('DELETE FROM cliente WHERE cpf = ?', [cpf], (errCliente, resultCliente) => {
+                            if (errCliente) {
+                                res.status(500).json({ error: errCliente });
+                            } else {
+                                if (resultCliente.affectedRows === 0) {
+                                    res.status(404).json({ error: 'Cliente não encontrado' });
+                                } else {
+                                    res.status(200).json({ message: 'Cliente e informações relacionadas removidos com sucesso' });
+                                }
+                            }
+                        });
+                    }
+                });
             }
         });
     } else {
         res.status(400).json({ error: 'Favor enviar todos os campos obrigatórios' });
     }
-    
 }
+
+
 
 module.exports = {
     addCliente,
