@@ -1,99 +1,59 @@
-const con = require('../connections/mysql');
+const con = require('../CONNECTION/connect').con;
 
-// CRUD - CREATE
+const create = (req, res) => {
+    const { placa, marca, modelo, tipo, diaria } = req.body;
 
-const addVeiculo = (req, res) => {
-    
-    const { placa, modelo, marca, tipo, diaria } = req.body;
-    if (placa && modelo && marca && tipo && diaria) {
-        con.query('INSERT INTO veiculo (placa, modelo, marca, tipo ENUM, diaria) VALUES (?, ?, ?, ?, ?)',
-            [placa, modelo, marca, tipo, diaria],
-            (err, result) => {
-                if (err) {
-                    console.error('Erro ao adicionar veículo:', err);
-                    res.status(500).json({ error: 'Erro ao adicionar veículo' });
-                } else {
-                    const newVehicle = { placa, modelo, marca, tipo, diaria };
-                    res.status(201).json(newVehicle);
-                }
-            });
-    } else {
-        res.status(400).json({ error: 'Favor enviar todos os campos obrigatórios' });
-    }
-
+    const sql = `INSERT INTO Veiculo (placa, marca, modelo, tipo, diaria) VALUES (?, ?, ?, ?, ?)`;
+    con.query(sql, [placa, marca, modelo, tipo, diaria], (err, result) => {
+        if(err) {
+            res.status(500).json(err);
+        } else {
+            res.status(201).json(req.body);
+        }
+    })
 };
 
-// CRUD - READ
 
-const getVeiculos = (req, res) => {
-    con.query('SELECT * FROM veiculo ORDER BY placa DESC', (err, result) => {
-        if (err) {
-            res.status(500).json({ error: 'Erro ao listar veículos' });
+const read = (req, res) => {
+    const sql = 'SELECT * FROM Veiculo';
+    con.query(sql, (err, result) => {
+        if(err) {
+            res.status(500).json(err);
         } else {
-            res.json(result);
+            res.status(200).json(result);
         }
-    });
-}
+    })
+};
 
-const getVeiculo = (req, res) => {
-    const sql = "SELECT * FROM veiculo WHERE placa LIKE ?";
-    con.query(sql, `${[req.params.placa]}`, (err, result) => {
-        if (err) {
-            res.json(err);
+const update = (req, res) => {
+    const { id } = req.params;
+    const { placa, marca, modelo, tipo, diaria } = req.body;
+
+    const sql = `UPDATE Veiculo SET placa = ?, marca = ?, modelo = ?, tipo = ?, diaria = ? WHERE id = ?`;
+    con.query(sql, [placa, marca, modelo, tipo, diaria, id], (err, result) => {
+        if(err) {
+            res.status(500).json(err);
         } else {
-            res.json(result);
+            res.status(200).json(req.body);
         }
-    });
-}
+    })
+};
 
-// CRUD - UPDATE
-
-const updateVeiculo = (req, res) => {
-
-    const { placa, modelo, marca, tipo, diaria} = req.body;
-    if (placa && modelo && marca && tipo && diaria) {
-        con.query('UPDATE veiculo SET modelo = ?, marca = ?, tipo = ?, diaria = ? WHERE placa = ?', 
-        [modelo, marca, tipo, diaria, placa], 
-        (err, result) => {
-            if (err) {
-                res.status(500).json({ error: err });
-            } else {
-                res.status(200).json(req.body);
-            }
-        });
-    } else {
-        res.status(400).json({ error: 'Favor enviar todos os campos obrigatórios' });
-    }
-
-}
-
-// CRUD - DELETE
-
-const deleteVeiculo = (req, res) => {
-    
-    const { placa } = req.params;
-    if (placa) {
-        con.query('DELETE FROM veiculo WHERE placa = ?', [placa], (err, result) => {
-            if (err) {
-                res.status(500).json({ error: err });
-            } else {
-                if (result.affectedRows === 0) {
-                    res.status(404).json({ error: 'Veículo não encontrado' });
-                } else {
-                    res.status(200).json({ message: 'Veículo removido com sucesso' });
-                }
-            }
-        });
-    } else {
-        res.status(400).json({ error: 'Favor enviar todos os campos obrigatórios' });
-    }
-    
+const del = (req, res) => {
+    const { id } = req.params;
+    const sql = `DELETE FROM Veiculo WHERE id = ?`;
+    con.query(sql, [id], (err, result) => {
+        if(err) {
+            res.status(500).json(err);
+        } else {
+            res.status(200).json(req.body);
+        }
+    })
 }
 
 module.exports = {
-    addVeiculo,
-    getVeiculos,
-    getVeiculo,
-    updateVeiculo,
-    deleteVeiculo
+    create,
+    read,
+    update,
+    del
 }

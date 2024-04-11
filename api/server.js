@@ -1,13 +1,12 @@
-const express = require("express");
-const cors = require("cors");
-
-const routes = require ("./src/routes");
+const express = require('express');
+const cors = require('cors');
+const routes = require('./SRC/routes');
 
 const app = express();
-app.use(cors());
 app.use(express.json());
+app.use(cors());
 app.use(routes);
 
-app.listem(3000, ()=>{
-    console.log("Back-end respondendo na porta 3000");
+app.listen(3000, () => {
+    console.log('API Respondendo na porta 3000!');
 });

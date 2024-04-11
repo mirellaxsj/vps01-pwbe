@@ -1,116 +1,69 @@
-const con = require('../connections/mysql');
+const con = require('../CONNECTION/connect').con;
 
-// CRUD - CREATE
+const create = (req, res) => {
+    const { nome_cliente, cpf, telefone } = req.body;
+    const sql = `INSERT INTO Cliente (nome_cliente, cpf) VALUES (?, ?)`;
+    con.query(sql, [nome_cliente, cpf], (err, result) => {
+        if(err) {
+            if(err.code == 'ER_DUP_ENTRY') {
+                res.status(409).json('Ja existe um cliente com esse CPF');
+            } else {
+                res.status(500).json(err);
+            }
+        } else {
+            res.status(201).json(req.body);
+        }
+    });
 
-const addCliente = (req, res) => {
-    
-    const { cpf, nome_cliente } = req.body;
-    if (cpf && nome_cliente) {
-        con.query('INSERT INTO cliente (cpf, nome_cliente) VALUES (?, ?)',
-            [cpf, nome_cliente],
-            (err, result) => {
-                if (err) {
-                    console.error('Erro ao adicionar funcionário:', err);
-                    res.status(500).json({ error: 'Erro ao adicionar cliente' });
-                } else {
-                    const newEmployee = { cpf, nome_cliente };
-                    res.status(201).json(newEmployee);
-                }
-            });
-    } else {
-        res.status(400).json({ error: 'Favor enviar todos os campos obrigatórios' });
+    if(telefone != null) {
+        const sql2 = `INSERT INTO Telefone (cpf, numero) VALUES (?, ?)`;
+        con.query(sql2, [cpf, telefone]);
     }
+}
 
+const read = (req, res) => {
+    const sql = 'SELECT * FROM Cliente';
+    con.query(sql, (err, result) => {
+        if(err) {
+            res.status(500).json(err);
+        } else {
+            res.status(200).json(result);
+        }
+    });
 };
 
-// CRUD - READ
-
-const getClientes = (req, res) => {
-
-    con.query('SELECT * FROM cliente', (err, result) => {
-        if (err) {
-            res.status(500).json({ error: 'Erro ao listar clientes' });
+const update = (req, res) => {
+    const { nome_cliente, cpf, telefone } = req.body;
+    const sql = `UPDATE Cliente SET nome_cliente = ?, cpf = ? WHERE cpf = ?`;
+    con.query(sql, [nome_cliente, cpf, cpf], (err, result) => {
+        if(err) {
+            res.status(500).json(err);
         } else {
-            res.json(result);
+            res.status(200).json(req.body);
         }
     });
 
-}
-
-const getCliente = (req, res) => {
-    const sql = "SELECT * FROM cliente WHERE cpf LIKE ?";
-    con.query(sql, `%${[req.params.cpf]}%`, (err, result) => {
-        if (err) {
-            res.json(err);
-        } else {
-            res.json(result);
-        }
-    });
-}
-
-// CRUD - UPDATE
-
-const updateCliente = (req, res) => {
-
-    const { cpf, nome_cliente } = req.body;
-    if (cpf && nome_cliente) {
-        con.query('UPDATE cliente SET nome_cliente = ? WHERE cpf = ?', 
-        [nome_cliente, cpf], 
-        (err, result) => {
-            if (err) {
-                res.status(500).json({ error: err });
-            } else {
-                res.status(200).json(req.body);
-            }
-        });
-    } else {
-        res.status(400).json({ error: 'Favor enviar todos os campos obrigatórios' });
+    if(telefone != null) {
+        const sql2 = `UPDATE Telefone SET telefone = ? WHERE id = ?`;
+        con.query(sql2, [telefone, id]);
     }
-}
+};
 
-// CRUD - DELETE
-
-const deleteCliente = (req, res) => {
+const del = (req, res) => {
     const { cpf } = req.params;
-    
-    if (cpf) {
-        // Excluir todas as linhas na tabela telefone que têm uma referência para o CPF especificado
-        con.query('DELETE FROM telefone WHERE cpf = ?', [cpf], (errTelefone, resultTelefone) => {
-            if (errTelefone) {
-                res.status(500).json({ error: errTelefone });
-            } else {
-                // Excluir todas as linhas na tabela aluguel que têm uma referência para o CPF especificado
-                con.query('DELETE FROM aluguel WHERE cpf = ?', [cpf], (errAluguel, resultAluguel) => {
-                    if (errAluguel) {
-                        res.status(500).json({ error: errAluguel });
-                    } else {
-                        // Finalmente, excluir a linha na tabela cliente
-                        con.query('DELETE FROM cliente WHERE cpf = ?', [cpf], (errCliente, resultCliente) => {
-                            if (errCliente) {
-                                res.status(500).json({ error: errCliente });
-                            } else {
-                                if (resultCliente.affectedRows === 0) {
-                                    res.status(404).json({ error: 'Cliente não encontrado' });
-                                } else {
-                                    res.status(200).json({ message: 'Cliente e informações relacionadas removidos com sucesso' });
-                                }
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    } else {
-        res.status(400).json({ error: 'Favor enviar todos os campos obrigatórios' });
-    }
+    const sql = `DELETE FROM Cliente WHERE cpf = ?`;
+    con.query(sql, [cpf], (err, result) => {
+        if(err) {
+            res.status(500).json(err);
+        } else {
+            res.status(200).json(req.body);
+        }
+    });
 }
-
-
 
 module.exports = {
-    addCliente,
-    getClientes,
-    getCliente,
-    updateCliente,
-    deleteCliente
+    create,
+    read,
+    update,
+    del
 }

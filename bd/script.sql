@@ -10,7 +10,7 @@ CREATE TABLE Cliente (
 CREATE TABLE Telefone (
     cpf VARCHAR(14),
     numero VARCHAR(15) NOT NULL UNIQUE,
-    foreign key (cpf) references Cliente(cpf)
+    foreign key (cpf) references Cliente(cpf) ON DELETE CASCADE
 );
 
 CREATE TABLE Veiculo (
@@ -120,6 +120,7 @@ select * from Cliente;
 select * from Telefone;
 select * from Veiculo;
 select * from Aluguel;
+
 select * from vw_todos_os_alugueis_com_status;
 select * from vw_alugueis_reservados;
 select * from vw_alugueis_em_andamento;
